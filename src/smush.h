@@ -45,6 +45,7 @@ typedef struct smush_fobj
 } smush_fobj;
 
 
+typedef struct codec48_ctx codec48_ctx; 
 typedef struct smush_ctx
 {
     char fpath[512];
@@ -54,7 +55,16 @@ typedef struct smush_ctx
     smush_ahdr_ext ahdr_ext;
 
     uint32_t start_fpos;
+    uint32_t frame_fpos;
     uint8_t num_channels;
+
+    codec48_ctx* c48_ctx;
+    uint8_t* framebuffer;
+
+    int16_t codec_x;
+    int16_t codec_y;
+    uint16_t codec_w;
+    uint16_t codec_h;
 } smush_ctx;
 
 // BE32
@@ -63,6 +73,10 @@ typedef struct smush_ctx
 #define SMUSH_MAGIC_FRME (0x46524D45)
 
 smush_ctx* smush_from_fpath(const char* fpath);
+
+void smush_frame(smush_ctx* ctx);
+void smush_proc_frme(smush_ctx* ctx, uint32_t seek_pos, uint32_t total_size);
+
 void smush_print(smush_ctx* ctx);
 void smush_print_frme(smush_ctx* ctx, uint32_t seek_pos, uint32_t total_size);
 

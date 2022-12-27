@@ -4,10 +4,16 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#include "codec48.h"
+
 smush_ctx* smush_from_fpath(const char* fpath)
 {
     smush_ctx* ctx = (smush_ctx*)malloc(sizeof(smush_ctx));
     if (!ctx) return NULL;
+
+    memset(ctx, 0, sizeof(*ctx));
+
+    ctx->framebuffer = malloc(640*480*sizeof(uint8_t));
 
     ctx->f = fopen(fpath, "rb");
     if (!ctx->f) {
@@ -42,6 +48,7 @@ smush_ctx* smush_from_fpath(const char* fpath)
     }
 
     ctx->start_fpos = sizeof(ctx->header) + sizeof(smush_header) + getbe32(ahdr->size);
+    ctx->frame_fpos = ctx->start_fpos;
 
     return ctx;
 
@@ -53,6 +60,82 @@ cleanup_2:
     fclose(ctx->f);
     free(ctx);
     return NULL;
+}
+
+void smush_frame(smush_ctx* ctx)
+{
+    uint32_t seek_pos = ctx->start_fpos;
+    
+    while (1)
+    {
+        smush_header tmp;
+        
+        fseek(ctx->f, seek_pos, SEEK_SET);
+        if(fread(&tmp, 1, sizeof(tmp), ctx->f) <= 0) break;
+
+        if(getbe32(tmp.magic) == SMUSH_MAGIC_FRME) {
+            smush_proc_frme(ctx, seek_pos, getbe32(tmp.size));
+
+            ctx->frame_fpos = seek_pos;
+            ctx->frame_fpos += 8;
+            ctx->frame_fpos += getbe32(tmp.size);
+            break;
+        }
+        else {
+            printf("  Tag @ 0x%x:\n", seek_pos);
+            printf("    Magic: %c%c%c%c\n", tmp.magic[0], tmp.magic[1], tmp.magic[2], tmp.magic[3]);
+            printf("    Size: 0x%x\n", getbe32(tmp.size));
+        }
+
+        seek_pos += 8;
+        seek_pos += getbe32(tmp.size);
+    }
+}
+
+void smush_proc_frme(smush_ctx* ctx, uint32_t seek_pos, uint32_t total_size)
+{
+    smush_header tmp;
+    smush_fobj fobj;
+        
+    fseek(ctx->f, seek_pos, SEEK_SET);
+    if(fread(&tmp, 1, sizeof(tmp), ctx->f) <= 0) return;
+
+    printf("  Frame Header @ 0x%x:\n", seek_pos);
+    printf("    Magic: %c%c%c%c\n", tmp.magic[0], tmp.magic[1], tmp.magic[2], tmp.magic[3]);
+    printf("    Size: 0x%x\n\n", getbe32(tmp.size));
+
+    if(fread(&fobj, 1, sizeof(fobj), ctx->f) <= 0) return;
+
+    printf("    Magic: %c%c%c%c\n", fobj.magic[0], fobj.magic[1], fobj.magic[2], fobj.magic[3]);
+    printf("    Size: 0x%x\n", getbe32(fobj.size));
+    printf("    Codec: %u\n", fobj.codec);
+    printf("    Codec Param: 0x%x\n", fobj.codec_param);
+    printf("    Xpos: %d\n", getles16(fobj.x));
+    printf("    Ypos: %d\n", getles16(fobj.y));
+    printf("    Width: %u\n", getle16(fobj.width));
+    printf("    Height: %u\n", getle16(fobj.height));
+    printf("    Unk3: 0x%x\n", getle16(fobj.unk3));
+    printf("    Unk4: 0x%x\n", getle16(fobj.unk4));
+
+    ctx->codec_x = getles16(fobj.x);
+    ctx->codec_y = getles16(fobj.y);
+    ctx->codec_w = getle16(fobj.width);
+    ctx->codec_h = getle16(fobj.height);
+
+    uint8_t* data = malloc(total_size - 0xE);
+    if (!data) return;
+
+    fread(data, total_size - 0xE, 1, ctx->f);
+
+    if (fobj.codec == 48) {
+        codec48_proc(ctx, data);
+    }
+    else {
+        printf("Cannot handle codec: %u\n", fobj.codec);
+    }
+    
+
+    free(data);
 }
 
 void smush_print(smush_ctx* ctx)
@@ -118,14 +201,30 @@ void smush_print_frme(smush_ctx* ctx, uint32_t seek_pos, uint32_t total_size)
 
     if(fread(&fobj, 1, sizeof(fobj), ctx->f) <= 0) return;
 
-    printf("    Magic: %c%c%c%c\n", fobj.magic[0], fobj.magic[1], fobj.magic[2], fobj.magic[3]);
-    printf("    Size: 0x%x\n", getbe32(fobj.size));
-    printf("    Codec: %u\n", fobj.codec);
-    printf("    Codec Param: 0x%x\n", fobj.codec_param);
-    printf("    Xpos: %d\n", getles16(fobj.x));
-    printf("    Ypos: %d\n", getles16(fobj.y));
-    printf("    Width: %u\n", getle16(fobj.width));
-    printf("    Height: %u\n", getle16(fobj.height));
-    printf("    Unk3: 0x%x\n", getle16(fobj.unk3));
-    printf("    Unk4: 0x%x\n", getle16(fobj.unk4));
+    printf("    Frame Data:\n");
+    printf("      Magic: %c%c%c%c\n", fobj.magic[0], fobj.magic[1], fobj.magic[2], fobj.magic[3]);
+    printf("      Size: 0x%x\n", getbe32(fobj.size));
+    printf("      Codec: %u\n", fobj.codec);
+    printf("      Codec Param: 0x%x\n", fobj.codec_param);
+    printf("      Xpos: %d\n", getles16(fobj.x));
+    printf("      Ypos: %d\n", getles16(fobj.y));
+    printf("      Width: %u\n", getle16(fobj.width));
+    printf("      Height: %u\n", getle16(fobj.height));
+    printf("      Unk3: 0x%x\n", getle16(fobj.unk3));
+    printf("      Unk4: 0x%x\n", getle16(fobj.unk4));
+
+    uint8_t* data = malloc(total_size - 0xE);
+    if (!data) return;
+
+    fread(data, total_size - 0xE, 1, ctx->f);
+
+    if (fobj.codec == 48) {
+        //codec48_proc(ctx, data);
+    }
+    else {
+        printf("Cannot handle codec: %u\n", fobj.codec);
+    }
+    
+
+    free(data);
 }

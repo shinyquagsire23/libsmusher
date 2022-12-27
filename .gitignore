@@ -3,3 +3,4 @@ build
 *.san
 *.SAN
 libsmusher-standalone
+test.bin
