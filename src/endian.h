@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-inline uint64_t getle64(const uint8_t* p)
+static inline uint64_t getle64(const uint8_t* p)
 {
     uint64_t n = p[0];
 
@@ -17,7 +17,7 @@ inline uint64_t getle64(const uint8_t* p)
     return n;
 }
 
-inline uint64_t getbe64(const uint8_t* p)
+static inline uint64_t getbe64(const uint8_t* p)
 {
     uint64_t n = 0;
 
@@ -32,7 +32,7 @@ inline uint64_t getbe64(const uint8_t* p)
     return n;
 }
 
-inline uint64_t getbe48(const uint8_t* p)
+static inline uint64_t getbe48(const uint8_t* p)
 {
     uint64_t n = 0;
 
@@ -45,7 +45,7 @@ inline uint64_t getbe48(const uint8_t* p)
     return n;
 }
 
-inline uint64_t getle48(const uint8_t* p)
+static inline uint64_t getle48(const uint8_t* p)
 {
     uint64_t n = p[0];
 
@@ -57,38 +57,38 @@ inline uint64_t getle48(const uint8_t* p)
     return n;
 }
 
-inline uint32_t getle32(const uint8_t* p)
+static inline uint32_t getle32(const uint8_t* p)
 {
     return (p[0]<<0) | (p[1]<<8) | (p[2]<<16) | (p[3]<<24);
 }
 
-inline uint32_t getbe32(const uint8_t* p)
+static inline uint32_t getbe32(const uint8_t* p)
 {
     return (p[0]<<24) | (p[1]<<16) | (p[2]<<8) | (p[3]<<0);
 }
 
-inline uint32_t getle16(const uint8_t* p)
+static inline uint32_t getle16(const uint8_t* p)
 {
     return (p[0]<<0) | (p[1]<<8);
 }
 
-inline int16_t getles16(const uint8_t* p)
+static inline int16_t getles16(const uint8_t* p)
 {
     return (p[0]<<0) | (p[1]<<8);
 }
 
-inline uint32_t getbe16(const uint8_t* p)
+static inline uint32_t getbe16(const uint8_t* p)
 {
     return (p[0]<<8) | (p[1]<<0);
 }
 
-inline void putle16(uint8_t* p, uint16_t n)
+static inline void putle16(uint8_t* p, uint16_t n)
 {
     p[0] = (uint8_t) n;
     p[1] = (uint8_t) (n>>8);
 }
 
-inline void putle32(uint8_t* p, uint32_t n)
+static inline void putle32(uint8_t* p, uint32_t n)
 {
     p[0] = (uint8_t) n;
     p[1] = (uint8_t) (n>>8);
@@ -96,7 +96,7 @@ inline void putle32(uint8_t* p, uint32_t n)
     p[3] = (uint8_t) (n>>24);
 }
 
-inline void putle48(uint8_t* p, uint64_t n)
+static inline void putle48(uint8_t* p, uint64_t n)
 {
     p[0] = (uint8_t)n;
     p[1] = (uint8_t)(n >> 8);
@@ -106,7 +106,7 @@ inline void putle48(uint8_t* p, uint64_t n)
     p[5] = (uint8_t)(n >> 40);
 }
 
-inline void putle64(uint8_t* p, uint64_t n)
+static inline void putle64(uint8_t* p, uint64_t n)
 {
     p[0] = (uint8_t) n;
     p[1] = (uint8_t) (n >> 8);
@@ -118,13 +118,13 @@ inline void putle64(uint8_t* p, uint64_t n)
     p[7] = (uint8_t) (n >> 56);
 }
 
-inline void putbe16(uint8_t* p, uint16_t n)
+static inline void putbe16(uint8_t* p, uint16_t n)
 {
     p[1] = (uint8_t) n;
     p[0] = (uint8_t) (n >> 8);
 }
 
-inline void putbe32(uint8_t* p, uint32_t n)
+static inline void putbe32(uint8_t* p, uint32_t n)
 {
     p[3] = (uint8_t) n;
     p[2] = (uint8_t) (n >> 8);
@@ -132,7 +132,7 @@ inline void putbe32(uint8_t* p, uint32_t n)
     p[0] = (uint8_t) (n >> 24);
 }
 
-inline void putbe48(uint8_t* p, uint64_t n)
+static inline void putbe48(uint8_t* p, uint64_t n)
 {
     p[5] = (uint8_t)n;
     p[4] = (uint8_t)(n >> 8);
@@ -142,7 +142,7 @@ inline void putbe48(uint8_t* p, uint64_t n)
     p[0] = (uint8_t)(n >> 40);
 }
 
-inline void putbe64(uint8_t* p, uint64_t n)
+static inline void putbe64(uint8_t* p, uint64_t n)
 {
     p[7] = (uint8_t) n;
     p[6] = (uint8_t) (n >> 8);

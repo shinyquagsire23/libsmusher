@@ -9,8 +9,8 @@ OBJECTS := $(patsubst $(SRC)/%.c, $(OBJ)/%.o, $(SOURCES))
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
 # Flags
-LDFLAGS := $(pkg-config --libs sdl2) $(pkg-config --cflags sdl2-mixer) -fshort-wchar #-lGL -lGLEW -lopenal -lalut
-CFLAGS := -O2 -I$(ROOT_DIR)/$(SRC) $(pkg-config --cflags sdl2) -Wuninitialized -fshort-wchar -Wall -Wno-unused-variable -Wno-parentheses -Wno-missing-braces 
+LDFLAGS := $(shell pkg-config --libs sdl2) $(shell pkg-config --libs sdl2_mixer) -fshort-wchar #-lGL -lGLEW -lopenal -lalut
+CFLAGS := -O0 -I$(ROOT_DIR)/$(SRC) $(shell pkg-config --cflags sdl2) $(shell pkg-config --cflags sdl2_mixer) -Wuninitialized -fshort-wchar -Wall -Wno-unused-variable -Wno-parentheses -Wno-missing-braces 
 
 LIBSMUSHER_NO_ASAN ?= 0
 

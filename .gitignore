@@ -4,3 +4,4 @@ build
 *.SAN
 libsmusher-standalone
 test.bin
+.DS_Store
